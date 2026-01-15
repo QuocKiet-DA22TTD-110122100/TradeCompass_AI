@@ -1,0 +1,195 @@
+.dashboard {
+  padding: 20px 0;
+}
+
+.dashboard-header {
+  margin-bottom: 40px;
+}
+
+.dashboard-header h1 {
+  font-size: 36px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard-header p {
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.section h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #e2e8f0;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px;
+  font-size: 18px;
+  color: #94a3b8;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.stat-name {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.stat-change {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stat-change.positive {
+  color: #10b981;
+}
+
+.stat-change.negative {
+  color: #ef4444;
+}
+
+.card-title {
+  font-size: 18px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #334155;
+}
+
+.stock-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #334155;
+}
+
+.stock-item:last-child {
+  border-bottom: none;
+}
+
+.stock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stock-symbol {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.stock-price {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.stock-change {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.stock-change.positive {
+  color: #10b981;
+}
+
+.stock-change.negative {
+  color: #ef4444;
+}
+
+.signal-item {
+  padding: 20px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #0f172a;
+}
+
+.signal-item:last-child {
+  margin-bottom: 0;
+}
+
+.signal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.signal-symbol {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.signal-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.signal-badge.buy {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.signal-badge.sell {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.signal-details {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.signal-strength {
+  flex: 1;
+}
+
+.strength-bar {
+  height: 6px;
+  background: #334155;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.strength-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  transition: width 0.3s;
+}
+
+.signal-price {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.signal-reasoning {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
