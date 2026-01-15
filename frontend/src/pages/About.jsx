@@ -132,7 +132,7 @@ function About() {
             </p>
             <div className="contact-info">
               <p>📧 Email: support@tradecompass-ai.com</p>
-              <p>🐙 GitHub: QuocKiet-DA22TTD-110122100/TradeCompass_AI</p>
+              <p>🐙 GitHub: github.com/QuocKiet-DA22TTD-110122100/TradeCompass_AI</p>
               <p>📚 Documentation: Available in the repository</p>
             </div>
           </section>

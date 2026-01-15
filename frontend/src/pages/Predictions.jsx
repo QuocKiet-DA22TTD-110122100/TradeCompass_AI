@@ -72,7 +72,7 @@ function Predictions() {
               <div className="prediction-header">
                 <h2>{prediction.symbol}</h2>
                 <span className={`recommendation-badge ${prediction.recommendation}`}>
-                  {prediction.recommendation.toUpperCase()}
+                  {prediction.recommendation?.toUpperCase() || 'N/A'}
                 </span>
               </div>
 

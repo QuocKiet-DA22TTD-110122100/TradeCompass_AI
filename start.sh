@@ -49,7 +49,7 @@ source venv/bin/activate
 
 # Install backend dependencies
 echo "📦 Installing backend dependencies..."
-pip install -r requirements.txt -q
+pip install -r requirements.txt
 
 # Install frontend dependencies if not already installed
 if [ ! -d "frontend/node_modules" ]; then

@@ -46,7 +46,7 @@ call venv\Scripts\activate.bat
 
 REM Install backend dependencies
 echo 📦 Installing backend dependencies...
-pip install -r requirements.txt -q
+pip install -r requirements.txt
 
 REM Install frontend dependencies if not already installed
 if not exist "frontend\node_modules" (

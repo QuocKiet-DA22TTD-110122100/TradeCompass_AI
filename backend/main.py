@@ -7,18 +7,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
+from core.config import (
+    API_HOST, API_PORT, API_TITLE, API_VERSION, 
+    API_DESCRIPTION, CORS_ORIGINS
+)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="TradeCompass AI",
-    description="AI-powered trading insights and recommendations for everyone",
-    version="1.0.0"
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION
 )
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,9 +40,9 @@ app.include_router(predictions.router, prefix="/api/predictions", tags=["predict
 async def root():
     """Root endpoint with API information"""
     return {
-        "name": "TradeCompass AI",
-        "version": "1.0.0",
-        "description": "AI-powered trading ecosystem accessible to everyone",
+        "name": API_TITLE,
+        "version": API_VERSION,
+        "description": API_DESCRIPTION,
         "endpoints": {
             "health": "/health",
             "market": "/api/market",
@@ -48,4 +52,4 @@ async def root():
     }
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host=API_HOST, port=API_PORT, reload=True)

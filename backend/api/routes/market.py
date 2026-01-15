@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from core.config import SAMPLE_INDICES, SAMPLE_BASE_PRICE, SAMPLE_PRICE_VOLATILITY
 
 router = APIRouter()
 
@@ -32,11 +33,7 @@ async def get_market_overview():
         "market": "Global Markets",
         "status": "open",
         "timestamp": datetime.now().isoformat(),
-        "indices": [
-            {"name": "S&P 500", "value": 4783.45, "change": 0.65},
-            {"name": "NASDAQ", "value": 15043.23, "change": 1.23},
-            {"name": "DOW", "value": 37440.34, "change": 0.43}
-        ],
+        "indices": SAMPLE_INDICES,
         "top_gainers": [
             {
                 "symbol": "AAPL",
@@ -95,11 +92,11 @@ async def get_history(
     # Sample data - in production, fetch from real market data API
     data_points = []
     days = 30
-    base_price = 195.71
+    base_price = SAMPLE_BASE_PRICE
     
     for i in range(days):
         date = datetime.now() - timedelta(days=days-i)
-        price = base_price + (i - days/2) * 2.5
+        price = base_price + (i - days/2) * SAMPLE_PRICE_VOLATILITY
         data_points.append({
             "date": date.isoformat(),
             "open": price - 1.5,

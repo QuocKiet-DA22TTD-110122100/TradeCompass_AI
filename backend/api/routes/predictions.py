@@ -6,6 +6,10 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from core.config import (
+    SAMPLE_BASE_PRICE, PREDICTION_POSITIVE_CHANGE, 
+    PREDICTION_NEGATIVE_CHANGE, DEFAULT_CONFIDENCE
+)
 
 router = APIRouter()
 
@@ -34,10 +38,10 @@ class Signal(BaseModel):
 async def predict_price(request: PredictionRequest):
     """Get AI price prediction for a symbol"""
     # Sample AI prediction - in production, use real ML model
-    current_price = 195.71
-    predicted_change = 2.5 if hash(request.symbol) % 2 == 0 else -1.8
+    current_price = SAMPLE_BASE_PRICE
+    predicted_change = PREDICTION_POSITIVE_CHANGE if hash(request.symbol) % 2 == 0 else PREDICTION_NEGATIVE_CHANGE
     predicted_price = current_price + predicted_change
-    confidence = 0.75
+    confidence = DEFAULT_CONFIDENCE
     
     direction = "up" if predicted_change > 0 else "down" if predicted_change < 0 else "neutral"
     recommendation = "buy" if direction == "up" and confidence > 0.7 else \
