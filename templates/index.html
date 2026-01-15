@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock AI - Phân tích cổ phiếu thông minh</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <style>
+        .update-info {
+            background: rgba(0,212,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .update-info .time {
+            color: #00d4ff;
+        }
+        
+        .btn-update {
+            background: linear-gradient(135deg, #4caf50, #43a047);
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+        
+        .btn-update:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .realtime-price {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .download-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+        
+        .download-section input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #2a2a4a;
+            color: #fff;
+            width: 100px;
+            margin-right: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+        
+        .status-live {
+            background: #4caf50;
+        }
+        
+        .status-delayed {
+            background: #ff9800;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .header h1 {
+            color: #00d4ff;
+            font-size: 2em;
+        }
+        
+        .header p {
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        select, button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        select {
+            background: #2a2a4a;
+            color: #fff;
+            min-width: 150px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-screener {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1000px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .indicator-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .indicator-chart {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            height: 200px;
+        }
+        
+        .ai-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .ai-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .ai-header h2 {
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+        
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#00d4ff var(--score), #333 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        .score-inner {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .score-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .rating {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .buy-strong { background: linear-gradient(135deg, #00c853, #00a844); }
+        .buy { background: linear-gradient(135deg, #4caf50, #43a047); }
+        .watch { background: linear-gradient(135deg, #ff9800, #f57c00); }
+        .neutral { background: linear-gradient(135deg, #9e9e9e, #757575); }
+        .caution { background: linear-gradient(135deg, #ff5722, #e64a19); }
+        .avoid { background: linear-gradient(135deg, #f44336, #d32f2f); }
+        
+        .signals {
+            margin-top: 15px;
+        }
+        
+        .signal {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .signal.bullish {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 3px solid #4caf50;
+        }
+        
+        .signal.bearish {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 3px solid #f44336;
+        }
+        
+        .signal.neutral {
+            background: rgba(158, 158, 158, 0.2);
+            border-left: 3px solid #9e9e9e;
+        }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .indicator-box {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .indicator-box .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .indicator-box .label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Screener Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background: #1a1a2e;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 1200px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #00d4ff;
+        }
+        
+        .close-btn {
+            background: #f44336;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .screener-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .screener-table th, .screener-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        .screener-table th {
+            background: rgba(0,0,0,0.3);
+            color: #00d4ff;
+        }
+        
+        .screener-table tr:hover {
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+        
+        .price-up { color: #4caf50; }
+        .price-down { color: #f44336; }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #888;
+        }
+        
+        .stock-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .stock-info .symbol {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .stock-info .price {
+            font-size: 24px;
+            margin: 5px 0;
+        }
+        
+        .stock-info .change {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Stock AI</h1>
+        <p>Phân tích cổ phiếu thông minh với AI</p>
+    </div>
+    
+    <div class="container">
+        <div class="controls">
+            <select id="stockSelect">
+                <option value="">-- Chọn cổ phiếu --</option>
+            </select>
+            <button onclick="analyzeStock()">📊 Phân tích</button>
+            <button class="btn-update" onclick="updateCurrentStock()">🔄 Cập nhật giá</button>
+            <button class="btn-screener" onclick="openScreener()">🔍 Sàng lọc tất cả</button>
+            <button class="btn-update" onclick="updateAllStocks()">⬇️ Cập nhật tất cả</button>
+        </div>
+        
+        <div class="update-info" id="updateInfo" style="display: none;">
+            <span>📅 Dữ liệu cập nhật: <span class="time" id="lastUpdate">--</span></span>
+            <span id="priceStatus"></span>
+        </div>
+        
+        <div class="main-content">
+            <div class="chart-section">
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+                <div class="indicator-charts">
+                    <div class="indicator-chart">
+                        <canvas id="rsiChart"></canvas>
+                    </div>
+                    <div class="indicator-chart">
+                        <canvas id="macdChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ai-panel">
+                <div class="ai-header">
+                    <h2>🤖 AI Đánh giá</h2>
+                </div>
+                
+                <div id="aiResult">
+                    <p style="text-align: center; color: #888;">Chọn cổ phiếu để phân tích</p>
+                </div>
+                
+                <div class="download-section">
+                    <h4 style="margin-bottom: 10px;">➕ Thêm cổ phiếu mới</h4>
+                    <input type="text" id="newStockInput" placeholder="VD: FPT" maxlength="10">
+                    <button onclick="downloadNewStock()">Tải</button>
+                    <p style="font-size: 11px; color: #888; margin-top: 8px;">
+                        Nhập mã VN (FPT, VNM...) hoặc US (AAPL, MSFT...)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Screener Modal -->
+    <div id="screenerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔍 Sàng lọc cổ phiếu tiềm năng</h2>
+                <button class="close-btn" onclick="closeScreener()">Đóng</button>
+            </div>
+            <div id="screenerContent">
+                <div class="loading">Đang phân tích...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let priceChart, rsiChart, macdChart;
+        
+        // Load danh sách cổ phiếu
+        async function loadStocks() {
+            const res = await fetch('/api/stocks');
+            const stocks = await res.json();
+            const select = document.getElementById('stockSelect');
+            
+            stocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                option.textContent = stock;
+                select.appendChild(option);
+            });
+        }
+        
+        // Phân tích cổ phiếu
+        async function analyzeStock() {
+            const symbol = document.getElementById('stockSelect').value;
+            if (!symbol) {
+                alert('Vui lòng chọn cổ phiếu');
+                return;
+            }
+            
+            // Load dữ liệu
+            const dataRes = await fetch(`/api/stock/${symbol}`);
+            const data = await dataRes.json();
+            
+            // Load phân tích AI
+            const aiRes = await fetch(`/api/analyze/${symbol}`);
+            const ai = await aiRes.json();
+            
+            // Vẽ biểu đồ
+            drawCharts(data, symbol);
+            
+            // Hiển thị AI
+            displayAI(ai);
+        }
+        
+        // Vẽ biểu đồ
+        function drawCharts(data, symbol) {
+            // Destroy old charts
+            if (priceChart) priceChart.destroy();
+            if (rsiChart) rsiChart.destroy();
+            if (macdChart) macdChart.destroy();
+            
+            // Price Chart
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            priceChart = new Chart(priceCtx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [
+                        {
+                            label: 'Giá',
+                            data: data.close,
+                            borderColor: '#00d4ff',
+                            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'MA20',
+                            data: data.ma20,
+                            borderColor: '#ff9800',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'MA50',
+                            data: data.ma50,
+                            borderColor: '#e91e63',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'BB Upper',
+                            data: data.bb_upper,
+                            borderColor: 'rgba(156, 39, 176, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'BB Lower',
+                            data: data.bb_lower,
+                            borderColor: 'rgba(156, 39, 176, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${symbol} - Biểu đồ giá`,
+                            color: '#fff'
+                        },
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#888', maxTicksLimit: 10 },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // RSI Chart
+            const rsiCtx = document.getElementById('rsiChart').getContext('2d');
+            rsiChart = new Chart(rsiCtx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'RSI',
+                        data: data.rsi,
+                        borderColor: '#9c27b0',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'RSI (14)',
+                            color: '#fff'
+                        },
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: 70,
+                                    yMax: 70,
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5]
+                                },
+                                line2: {
+                                    type: 'line',
+                                    yMin: 30,
+                                    yMax: 30,
+                                    borderColor: 'green',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5]
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // MACD Chart
+            const macdCtx = document.getElementById('macdChart').getContext('2d');
+            macdChart = new Chart(macdCtx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [
+                        {
+                            label: 'MACD',
+                            data: data.macd,
+                            borderColor: '#00bcd4',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Signal',
+                            data: data.macd_signal,
+                            borderColor: '#ff5722',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'MACD',
+                            color: '#fff'
+                        },
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Hiển thị AI
+        function displayAI(ai) {
+            const scorePercent = (ai.score / ai.max_score) * 100;
+            const changeClass = ai.change >= 0 ? 'price-up' : 'price-down';
+            const changeSign = ai.change >= 0 ? '+' : '';
+            
+            let signalsHtml = ai.signals.map(s => 
+                `<div class="signal ${s.type}">${s.text}</div>`
+            ).join('');
+            
+            document.getElementById('aiResult').innerHTML = `
+                <div class="stock-info">
+                    <div class="symbol">${ai.symbol}</div>
+                    <div class="price realtime-price">${ai.price.toLocaleString()} đ</div>
+                    <div class="change ${changeClass}">${changeSign}${ai.change.toFixed(2)}%</div>
+                    <div style="font-size: 12px; color: #888; margin-top: 5px;">
+                        Cập nhật: ${ai.updated}
+                        <span class="status-badge ${ai.updated.includes(':') ? 'status-live' : 'status-delayed'}">
+                            ${ai.updated.includes(':') ? 'LIVE' : 'EOD'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="score-circle" style="--score: ${scorePercent}%">
+                    <div class="score-inner">
+                        <div class="score-value">${ai.score}</div>
+                        <div class="score-label">/ ${ai.max_score}</div>
+                    </div>
+                </div>
+                
+                <div class="rating ${ai.rec_class}">
+                    ${ai.rating} - ${ai.recommendation}
+                </div>
+                
+                <div class="indicators-grid">
+                    <div class="indicator-box">
+                        <div class="value">${ai.indicators.rsi.toFixed(0)}</div>
+                        <div class="label">RSI</div>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="value">${ai.indicators.vol_ratio.toFixed(1)}x</div>
+                        <div class="label">Volume</div>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="value">${ai.indicators.ma20.toLocaleString()}</div>
+                        <div class="label">MA20</div>
+                    </div>
+                    <div class="indicator-box">
+                        <div class="value">${ai.indicators.ma50.toLocaleString()}</div>
+                        <div class="label">MA50</div>
+                    </div>
+                </div>
+                
+                <div class="signals">
+                    <h4 style="margin-bottom: 10px;">📋 Tín hiệu</h4>
+                    ${signalsHtml}
+                </div>
+            `;
+        }
+        
+        // Screener
+        async function openScreener() {
+            document.getElementById('screenerModal').style.display = 'block';
+            document.getElementById('screenerContent').innerHTML = '<div class="loading">Đang phân tích tất cả cổ phiếu...</div>';
+            
+            const res = await fetch('/api/screener');
+            const results = await res.json();
+            
+            let tableHtml = `
+                <table class="screener-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã</th>
+                            <th>Giá</th>
+                            <th>%</th>
+                            <th>Điểm</th>
+                            <th>Rating</th>
+                            <th>Khuyến nghị</th>
+                            <th>RSI</th>
+                            <th>Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach((r, i) => {
+                const changeClass = r.change >= 0 ? 'price-up' : 'price-down';
+                const changeSign = r.change >= 0 ? '+' : '';
+                
+                tableHtml += `
+                    <tr onclick="selectStock('${r.symbol}')">
+                        <td>${i + 1}</td>
+                        <td><strong>${r.symbol}</strong></td>
+                        <td>${r.price.toLocaleString()}</td>
+                        <td class="${changeClass}">${changeSign}${r.change.toFixed(2)}%</td>
+                        <td>${r.score}/${r.max_score}</td>
+                        <td><span class="rating ${r.rec_class}" style="padding: 5px 10px; font-size: 12px;">${r.rating}</span></td>
+                        <td>${r.recommendation}</td>
+                        <td>${r.indicators.rsi.toFixed(0)}</td>
+                        <td>${r.indicators.vol_ratio.toFixed(1)}x</td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += '</tbody></table>';
+            
+            // Thêm tổng kết
+            const topStocks = results.filter(r => r.score >= 70);
+            let summaryHtml = `
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,212,255,0.1); border-radius: 10px;">
+                    <h3 style="color: #00d4ff; margin-bottom: 10px;">📊 Tổng kết</h3>
+                    <p>Tổng số cổ phiếu: <strong>${results.length}</strong></p>
+                    <p>Cổ phiếu tiềm năng (A, A+): <strong style="color: #4caf50;">${topStocks.length}</strong></p>
+                    ${topStocks.length > 0 ? `<p>Top picks: <strong>${topStocks.slice(0, 5).map(s => s.symbol).join(', ')}</strong></p>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('screenerContent').innerHTML = summaryHtml + tableHtml;
+        }
+        
+        function closeScreener() {
+            document.getElementById('screenerModal').style.display = 'none';
+        }
+        
+        function selectStock(symbol) {
+            document.getElementById('stockSelect').value = symbol;
+            closeScreener();
+            analyzeStock();
+        }
+        
+        // Cập nhật giá cổ phiếu hiện tại
+        async function updateCurrentStock() {
+            const symbol = document.getElementById('stockSelect').value;
+            if (!symbol) {
+                alert('Vui lòng chọn cổ phiếu');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang cập nhật...';
+            
+            try {
+                const res = await fetch(`/api/update/${symbol}`);
+                const result = await res.json();
+                
+                if (result.success) {
+                    alert(`Đã cập nhật ${symbol} thành công!`);
+                    analyzeStock();
+                } else {
+                    alert('Cập nhật thất bại: ' + result.message);
+                }
+            } catch (e) {
+                alert('Lỗi kết nối');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 Cập nhật giá';
+        }
+        
+        // Cập nhật tất cả cổ phiếu
+        async function updateAllStocks() {
+            if (!confirm('Cập nhật tất cả cổ phiếu? Quá trình này có thể mất vài phút.')) {
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang cập nhật...';
+            
+            try {
+                const res = await fetch('/api/update-all');
+                const result = await res.json();
+                
+                alert(`Hoàn thành!\nCập nhật: ${result.updated}\nThất bại: ${result.failed}`);
+            } catch (e) {
+                alert('Lỗi kết nối');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = '⬇️ Cập nhật tất cả';
+        }
+        
+        // Tải cổ phiếu mới
+        async function downloadNewStock() {
+            const input = document.getElementById('newStockInput');
+            const symbol = input.value.trim().toUpperCase();
+            
+            if (!symbol) {
+                alert('Nhập mã cổ phiếu');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/download/${symbol}`);
+                const result = await res.json();
+                
+                if (result.success) {
+                    alert(`Đã tải ${symbol}!`);
+                    loadStocks();
+                    input.value = '';
+                } else {
+                    alert('Không tìm thấy mã: ' + symbol);
+                }
+            } catch (e) {
+                alert('Lỗi kết nối');
+            }
+        }
+        
+        // Init
+        loadStocks();
+    </script>
+</body>
+</html>
